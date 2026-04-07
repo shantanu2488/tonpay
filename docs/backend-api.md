@@ -66,3 +66,51 @@ Creates an invoice and returns an ID plus a payment URL.
 - If request fails or `VITE_API_BASE_URL` is missing:
   - app falls back to local simulation mode
   - integration status shown as `simulated`
+
+## Get Invoice Status
+
+`GET /invoices/:id`
+
+Returns the latest invoice/payment lifecycle status for frontend polling.
+
+### Success response (`200`)
+
+```json
+{
+  "id": "inv_01JABCDEFG",
+  "status": "SETTLED",
+  "paidAt": "2026-04-08T09:14:23.000Z",
+  "settledAt": "2026-04-08T09:14:29.000Z",
+  "offRampStartedAt": null,
+  "offRampCompletedAt": null
+}
+```
+
+### Status enum
+
+- `PENDING`
+- `PAID`
+- `SETTLED`
+- `OFFRAMP_PROCESSING`
+- `PAID_OUT`
+
+## Webhook Contract (recommended)
+
+Backend should emit signed webhooks when invoice status changes.
+
+`POST <merchant_webhook_url>`
+
+```json
+{
+  "event": "invoice.status.changed",
+  "id": "inv_01JABCDEFG",
+  "status": "PAID_OUT",
+  "paidAt": "2026-04-08T09:14:23.000Z",
+  "settledAt": "2026-04-08T09:14:29.000Z",
+  "offRampStartedAt": "2026-04-08T09:15:02.000Z",
+  "offRampCompletedAt": "2026-04-08T09:16:11.000Z",
+  "signature": "hmac_sha256_signature"
+}
+```
+
+Frontend currently polls `GET /invoices/:id` every 5 seconds for live invoices.

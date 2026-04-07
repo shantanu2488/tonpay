@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { openLink } from '@tma.js/sdk-react';
 import { Page } from '@/components/Page.tsx';
-import { createRemoteInvoice } from '@/services/payments';
+import { createRemoteInvoice, getRemoteInvoiceStatus } from '@/services/payments';
 import { InvoiceForm } from './components/InvoiceForm';
 import { JourneyPreview } from './components/JourneyPreview';
 import { InvoiceLifecycleCard } from './components/InvoiceLifecycleCard';
@@ -199,6 +199,58 @@ export const IndexPage: FC = () => {
     return () => window.clearTimeout(timer);
   }, [offRampCompletedAt, offRampStartedAt]);
 
+  useEffect(() => {
+    if (integrationStatus !== 'live' || !remoteInvoiceId) return;
+
+    let cancelled = false;
+    const toLocalTime = (value?: string) => (value ? new Date(value).toLocaleString() : new Date().toLocaleString());
+    const syncStatus = async () => {
+      try {
+        const remote = await getRemoteInvoiceStatus(remoteInvoiceId);
+        if (cancelled) return;
+
+        setState((prev) => {
+          const next = { ...prev };
+          switch (remote.status) {
+            case 'PAID':
+              next.paidAt = prev.paidAt || toLocalTime(remote.paidAt);
+              break;
+            case 'SETTLED':
+              next.paidAt = prev.paidAt || toLocalTime(remote.paidAt);
+              next.settledAt = prev.settledAt || toLocalTime(remote.settledAt);
+              break;
+            case 'OFFRAMP_PROCESSING':
+              next.paidAt = prev.paidAt || toLocalTime(remote.paidAt);
+              next.settledAt = prev.settledAt || toLocalTime(remote.settledAt);
+              next.offRampStartedAt = prev.offRampStartedAt || toLocalTime(remote.offRampStartedAt);
+              break;
+            case 'PAID_OUT':
+              next.paidAt = prev.paidAt || toLocalTime(remote.paidAt);
+              next.settledAt = prev.settledAt || toLocalTime(remote.settledAt);
+              next.offRampStartedAt = prev.offRampStartedAt || toLocalTime(remote.offRampStartedAt);
+              next.offRampCompletedAt = prev.offRampCompletedAt || toLocalTime(remote.offRampCompletedAt);
+              break;
+            default:
+              break;
+          }
+          return next;
+        });
+      } catch {
+        // Keep last known state and retry on next poll.
+      }
+    };
+
+    void syncStatus();
+    const pollTimer = window.setInterval(() => {
+      void syncStatus();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(pollTimer);
+    };
+  }, [integrationStatus, remoteInvoiceId]);
+
   return (
     <Page back={false}>
       <List>
@@ -257,6 +309,7 @@ export const IndexPage: FC = () => {
             offRampCompletedAt={offRampCompletedAt}
             payoutRef={payoutRef}
             fiatQuote={fiatQuote}
+            allowSimulationActions={integrationStatus !== 'live'}
             onShareInvoice={onShareInvoice}
             onSimulatePaid={onSimulatePaid}
             onToggleOffRampProvider={() =>

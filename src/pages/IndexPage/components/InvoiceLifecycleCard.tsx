@@ -23,6 +23,7 @@ interface InvoiceLifecycleCardProps {
   offRampCompletedAt: string | null;
   payoutRef: string | null;
   fiatQuote: FiatQuote;
+  allowSimulationActions: boolean;
   onShareInvoice: () => void;
   onSimulatePaid: () => void;
   onToggleOffRampProvider: () => void;
@@ -46,6 +47,7 @@ export function InvoiceLifecycleCard(props: InvoiceLifecycleCardProps) {
     offRampCompletedAt,
     payoutRef,
     fiatQuote,
+    allowSimulationActions,
     onShareInvoice,
     onSimulatePaid,
     onToggleOffRampProvider,
@@ -77,7 +79,7 @@ export function InvoiceLifecycleCard(props: InvoiceLifecycleCardProps) {
       <Button stretched size="m" onClick={onShareInvoice}>
         02 — Share in chat
       </Button>
-      {!paidAt && (
+      {allowSimulationActions && !paidAt && (
         <Button stretched size="m" mode="bezeled" onClick={onSimulatePaid}>
           03 — Simulate client "Pay now"
         </Button>
@@ -102,7 +104,7 @@ export function InvoiceLifecycleCard(props: InvoiceLifecycleCardProps) {
             Off-ramp status: {offRampCompletedAt ? 'Paid out' : offRampStartedAt ? 'Processing' : 'Not started'}
           </Cell>
           {payoutRef && <Cell subtitle={payoutRef}>Fiat payout reference</Cell>}
-          {!offRampStartedAt && (
+          {allowSimulationActions && !offRampStartedAt && (
             <Button stretched size="m" mode="bezeled" onClick={onStartOffRamp}>
               05 — Convert to local fiat
             </Button>

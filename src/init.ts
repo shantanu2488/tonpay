@@ -5,7 +5,6 @@ import {
   viewport,
   init as initSDK,
   mockTelegramEnv,
-  type ThemeParams,
   retrieveLaunchParams,
   emitEvent,
   miniApp,
@@ -24,8 +23,8 @@ export async function init(options: {
   setDebug(options.debug);
   initSDK();
 
-  // Add Eruda if needed.
-  options.eruda && void import('eruda').then(({ default: eruda }) => {
+  // Add Eruda if needed. Keep it out of production bundles.
+  if (import.meta.env.DEV && options.eruda) void import('eruda').then(({ default: eruda }) => {
     eruda.init();
     eruda.position({ x: window.innerWidth - 50, y: 0 });
   });
@@ -38,12 +37,12 @@ export async function init(options: {
     mockTelegramEnv({
       onEvent(event, next) {
         if (event.name === 'web_app_request_theme') {
-          let tp: ThemeParams = {};
+          let tp: Record<string, `#${string}` | undefined> = {};
           if (firstThemeSent) {
-            tp = themeParams.state();
+            tp = themeParams.state() as unknown as Record<string, `#${string}` | undefined>;
           } else {
             firstThemeSent = true;
-            tp ||= retrieveLaunchParams().tgWebAppThemeParams;
+            tp = (retrieveLaunchParams().tgWebAppThemeParams ?? {}) as Record<string, `#${string}` | undefined>;
           }
           return emitEvent('theme_changed', { theme_params: tp });
         }

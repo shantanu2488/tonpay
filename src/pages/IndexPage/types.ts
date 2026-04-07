@@ -10,6 +10,9 @@ export interface InvoiceDraft {
 }
 
 export interface InvoiceFlowState extends InvoiceDraft {
+  remoteInvoiceId: string | null;
+  remotePayUrl: string | null;
+  integrationStatus: 'simulated' | 'live';
   createdAt: string | null;
   paidAt: string | null;
   settledAt: string | null;

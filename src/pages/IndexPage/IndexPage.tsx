@@ -3,6 +3,7 @@ import type { FC } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { openLink } from '@tma.js/sdk-react';
 import { Page } from '@/components/Page.tsx';
+import { createRemoteInvoice } from '@/services/payments';
 import { InvoiceForm } from './components/InvoiceForm';
 import { JourneyPreview } from './components/JourneyPreview';
 import { InvoiceLifecycleCard } from './components/InvoiceLifecycleCard';
@@ -16,6 +17,9 @@ const initialState: InvoiceFlowState = {
   amount: '',
   currency: 'USDT',
   dueDate: '',
+  remoteInvoiceId: null,
+  remotePayUrl: null,
+  integrationStatus: 'simulated',
   createdAt: null,
   paidAt: null,
   settledAt: null,
@@ -32,6 +36,9 @@ export const IndexPage: FC = () => {
     amount,
     currency,
     dueDate,
+    remoteInvoiceId,
+    remotePayUrl,
+    integrationStatus,
     createdAt,
     paidAt,
     settledAt,
@@ -63,11 +70,33 @@ export const IndexPage: FC = () => {
 
   const canCreate = client.trim() && description.trim() && amount.trim() && dueDate.trim();
 
-  const onCreateInvoice = () => {
+  const onCreateInvoice = async () => {
     if (!canCreate) return;
+    let nextRemoteInvoiceId: string | null = null;
+    let nextRemotePayUrl: string | null = null;
+    let nextIntegrationStatus: 'simulated' | 'live' = 'simulated';
+
+    try {
+      const invoice = await createRemoteInvoice({
+        client,
+        description,
+        amount,
+        currency,
+        dueDate,
+      });
+      nextRemoteInvoiceId = invoice.id;
+      nextRemotePayUrl = invoice.payUrl;
+      nextIntegrationStatus = 'live';
+    } catch {
+      nextIntegrationStatus = 'simulated';
+    }
+
     setState((prev) => ({
       ...prev,
       createdAt: new Date().toLocaleString(),
+      remoteInvoiceId: nextRemoteInvoiceId,
+      remotePayUrl: nextRemotePayUrl,
+      integrationStatus: nextIntegrationStatus,
       paidAt: null,
       settledAt: null,
       offRampStartedAt: null,
@@ -87,6 +116,8 @@ export const IndexPage: FC = () => {
     return `${baseUrl}?${params.toString()}`;
   }, [amount, currency, invoiceId]);
 
+  const effectivePayUrl = remotePayUrl || payUrl;
+
   const invoiceShareText = useMemo(() => {
     if (!invoiceId) return '';
     const lines = [
@@ -96,10 +127,10 @@ export const IndexPage: FC = () => {
       `Amount: ${amount} ${currency}`,
       `Due: ${dueDate}`,
       '',
-      `Pay now: ${payUrl}`,
+      `Pay now: ${effectivePayUrl}`,
     ];
     return lines.join('\n');
-  }, [amount, client, currency, description, dueDate, invoiceId, payUrl]);
+  }, [amount, client, currency, description, dueDate, effectivePayUrl, invoiceId]);
 
   const onShareInvoice = () => {
     if (!invoiceShareText) return;
@@ -178,6 +209,10 @@ export const IndexPage: FC = () => {
           <Cell subtitle="Pay contractors, freelancers, and global teams instantly in TON or USDT.">
             Payroll + Invoicing
           </Cell>
+          <Cell subtitle={integrationStatus === 'live' ? 'Using configured API backend' : 'Using local simulation mode'}>
+            Integration: {integrationStatus}
+          </Cell>
+          {remoteInvoiceId && <Cell subtitle="Latest backend invoice ID">{remoteInvoiceId}</Cell>}
           <Cell subtitle="Clear draft invoice and payout progress" onClick={onResetFlow}>
             Reset flow
           </Cell>
@@ -213,7 +248,7 @@ export const IndexPage: FC = () => {
             amount={amount}
             currency={currency}
             dueDate={dueDate}
-            payUrl={payUrl}
+            payUrl={effectivePayUrl}
             paidAt={paidAt}
             settledAt={settledAt}
             settlementRef={settlementRef}

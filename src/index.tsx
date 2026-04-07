@@ -6,7 +6,6 @@ import { StrictMode } from 'react';
 import { retrieveLaunchParams } from '@tma.js/sdk-react';
 
 import { Root } from '@/components/Root.tsx';
-import { EnvUnsupported } from '@/components/EnvUnsupported.tsx';
 import { init } from '@/init.ts';
 
 import './index.css';
@@ -36,5 +35,20 @@ try {
       );
     });
 } catch (e) {
-  root.render(<EnvUnsupported/>);
+  root.render(
+    <StrictMode>
+      <div style={{ padding: 16, fontFamily: 'system-ui, sans-serif' }}>
+        <p>An unhandled error occurred:</p>
+        <blockquote>
+          <code>
+            {e instanceof Error
+              ? e.message
+              : typeof e === 'string'
+                ? e
+                : JSON.stringify(e)}
+          </code>
+        </blockquote>
+      </div>
+    </StrictMode>,
+  );
 }

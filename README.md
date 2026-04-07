@@ -210,3 +210,21 @@ file according to your project's information.
 - [Platform documentation](https://docs.telegram-mini-apps.com/)
 - [@tma.js/sdk-react documentation](https://docs.telegram-mini-apps.com/packages/tma-js-sdk-react)
 - [Telegram developers community chat](https://t.me/devs_cis)
+
+## TonPay Integration Setup
+
+Create a local environment file from the example:
+
+```bash
+cp .env.example .env
+```
+
+Set your backend base URL:
+
+```bash
+VITE_API_BASE_URL=https://api.tonpay.app
+```
+
+Frontend integration details for the invoice API are documented in:
+
+- `docs/backend-api.md`

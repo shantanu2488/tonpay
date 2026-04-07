@@ -5,7 +5,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/reactjs-template/',
+  base: process.env.VITE_BASE_PATH || '/tonpay/',
   css: {
     preprocessorOptions: {
       scss: {

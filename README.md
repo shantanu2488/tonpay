@@ -234,8 +234,23 @@ VITE_ENABLE_MOCK=true
 Use `VITE_ENABLE_MOCK=true` only for browser previews (for example, GitHub Pages).
 Keep it `false` in normal production Telegram deployments.
 
+Base path for static hosting:
+
+```bash
+VITE_BASE_PATH=/tonpay/
+```
+
+Use `/tonpay/` for GitHub Pages, and `/` for Vercel/custom-domain root hosting.
+
 Frontend integration details for the invoice API are documented in:
 
 - `docs/backend-api.md`
 
-<!-- force-pages-redeploy -->
+## Vercel Deployment (Recommended for Telegram Testing)
+
+1. Import `shantanu2488/tonpay` in Vercel.
+2. Set environment variables in Vercel project settings:
+   - `VITE_BASE_PATH=/`
+   - `VITE_ENABLE_MOCK=true` (for browser testing) or `false` (Telegram-only behavior)
+   - `VITE_API_BASE_URL=<your-backend-url>`
+3. Deploy and use the generated HTTPS URL as your Mini App URL in BotFather.

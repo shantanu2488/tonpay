@@ -45,6 +45,8 @@ jobs:
           run_install: true
 
       - name: Build
+        env:
+          VITE_ENABLE_MOCK: 'true'
         run: pnpm run build
 
       - name: Setup Pages

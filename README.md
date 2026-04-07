@@ -225,6 +225,15 @@ Set your backend base URL:
 VITE_API_BASE_URL=https://api.tonpay.app
 ```
 
+Optional browser preview flag (non-Telegram environments):
+
+```bash
+VITE_ENABLE_MOCK=true
+```
+
+Use `VITE_ENABLE_MOCK=true` only for browser previews (for example, GitHub Pages).
+Keep it `false` in normal production Telegram deployments.
+
 Frontend integration details for the invoice API are documented in:
 
 - `docs/backend-api.md`

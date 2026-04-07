@@ -1,9 +1,8 @@
 import { emitEvent, isTMA, mockTelegramEnv } from '@tma.js/sdk-react';
 
-// It is important, to mock the environment only for development purposes. When building the
-// application, import.meta.env.DEV will become false, and the code inside will be tree-shaken,
-// so you will not see it in your final bundle.
-if (import.meta.env.DEV) {
+// Enable mock environment in development and optionally in production builds
+// using VITE_ENABLE_MOCK=true (useful for static previews like GitHub Pages).
+if (import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCK === 'true') {
   if (!await isTMA('complete')) {
     const themeParams = {
       accent_text_color: '#6ab2f2',

@@ -237,3 +237,5 @@ Keep it `false` in normal production Telegram deployments.
 Frontend integration details for the invoice API are documented in:
 
 - `docs/backend-api.md`
+
+<!-- force-pages-redeploy -->

@@ -114,3 +114,24 @@ Backend should emit signed webhooks when invoice status changes.
 ```
 
 Frontend currently polls `GET /invoices/:id` every 5 seconds for live invoices.
+
+## Webhook Signature Verification
+
+Use an HMAC SHA-256 signature to verify webhook authenticity.
+
+- Header: `x-tonpay-signature`
+- Value format: `sha256=<hex_digest>`
+- Secret: shared webhook secret stored in backend env (for example `TONPAY_WEBHOOK_SECRET`)
+
+### Signing payload
+
+Sign the raw request body bytes (not parsed JSON):
+
+`signature = HMAC_SHA256(secret, raw_body)`
+
+### Verification steps
+
+1. Read raw request body.
+2. Compute expected signature with your secret.
+3. Compare using constant-time comparison.
+4. Reject request (`401`) on mismatch.

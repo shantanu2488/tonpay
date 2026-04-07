@@ -10,6 +10,7 @@ import { InvoiceLifecycleCard } from './components/InvoiceLifecycleCard';
 import type { Currency, InvoiceFlowState } from './types';
 
 const STORAGE_KEY = 'tonpay.invoice.flow.v1';
+const REQUIRE_LIVE_API = import.meta.env.VITE_REQUIRE_LIVE_API === 'true';
 
 const initialState: InvoiceFlowState = {
   client: '',
@@ -20,6 +21,7 @@ const initialState: InvoiceFlowState = {
   remoteInvoiceId: null,
   remotePayUrl: null,
   integrationStatus: 'simulated',
+  integrationError: null,
   createdAt: null,
   paidAt: null,
   settledAt: null,
@@ -39,6 +41,7 @@ export const IndexPage: FC = () => {
     remoteInvoiceId,
     remotePayUrl,
     integrationStatus,
+    integrationError,
     createdAt,
     paidAt,
     settledAt,
@@ -75,6 +78,7 @@ export const IndexPage: FC = () => {
     let nextRemoteInvoiceId: string | null = null;
     let nextRemotePayUrl: string | null = null;
     let nextIntegrationStatus: 'simulated' | 'live' = 'simulated';
+    let nextIntegrationError: string | null = null;
 
     try {
       const invoice = await createRemoteInvoice({
@@ -88,7 +92,10 @@ export const IndexPage: FC = () => {
       nextRemotePayUrl = invoice.payUrl;
       nextIntegrationStatus = 'live';
     } catch {
-      nextIntegrationStatus = 'simulated';
+      nextIntegrationStatus = REQUIRE_LIVE_API ? 'live' : 'simulated';
+      nextIntegrationError = REQUIRE_LIVE_API
+        ? 'Live API is required but invoice creation failed. Check backend availability.'
+        : 'Using simulated mode because live invoice API is unavailable.';
     }
 
     setState((prev) => ({
@@ -97,6 +104,7 @@ export const IndexPage: FC = () => {
       remoteInvoiceId: nextRemoteInvoiceId,
       remotePayUrl: nextRemotePayUrl,
       integrationStatus: nextIntegrationStatus,
+      integrationError: nextIntegrationError,
       paidAt: null,
       settledAt: null,
       offRampStartedAt: null,
@@ -264,6 +272,7 @@ export const IndexPage: FC = () => {
           <Cell subtitle={integrationStatus === 'live' ? 'Using configured API backend' : 'Using local simulation mode'}>
             Integration: {integrationStatus}
           </Cell>
+          {integrationError && <Cell subtitle="Integration warning">{integrationError}</Cell>}
           {remoteInvoiceId && <Cell subtitle="Latest backend invoice ID">{remoteInvoiceId}</Cell>}
           <Cell subtitle="Clear draft invoice and payout progress" onClick={onResetFlow}>
             Reset flow

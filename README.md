@@ -234,6 +234,14 @@ VITE_ENABLE_MOCK=true
 Use `VITE_ENABLE_MOCK=true` only for browser previews (for example, GitHub Pages).
 Keep it `false` in normal production Telegram deployments.
 
+Strict live backend mode:
+
+```bash
+VITE_REQUIRE_LIVE_API=true
+```
+
+When enabled, invoice creation will not silently continue in simulated mode if the backend is down.
+
 Base path for static hosting:
 
 ```bash
